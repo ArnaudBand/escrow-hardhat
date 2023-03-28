@@ -32,4 +32,9 @@ contract Escrow {
 		amount = msg.value;
 		state = State.AWAITING_ARBITER;
 	}
+
+	function approve() public onlyArbiter inState(State.AWAITING_ARBITER) {
+		payable(beneficiary).transfer(amount);
+		state = State.COMPLETE;
+	}
 }
