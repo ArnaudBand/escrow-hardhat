@@ -8,4 +8,6 @@ contract Escrow {
 	uint public amount;
 
 	enum State { AWAITING_DEPOSITOR, AWAITING_ARBITER, COMPLETE }
+
+	State public state;
 }
