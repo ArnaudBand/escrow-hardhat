@@ -15,4 +15,9 @@ contract Escrow {
 		require(msg.sender == arbiter, "Only arbiter can perform this action.");
 		_;
 	}
+
+	modifier inState(State _state) {
+		require(state == _state, "Invalid State");
+		_;
+	}
 }
