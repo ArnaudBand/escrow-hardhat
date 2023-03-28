@@ -10,4 +10,9 @@ contract Escrow {
 	enum State { AWAITING_DEPOSITOR, AWAITING_ARBITER, COMPLETE }
 
 	State public state;
+
+	modifier onlyArbiter() {
+		require(msg.sender == arbiter, "Only arbiter can perform this action.");
+		_;
+	}
 }
