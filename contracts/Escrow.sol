@@ -26,4 +26,10 @@ contract Escrow {
 		beneficiary = _beneficiary;
 		state = State.AWAITING_DEPOSIT;
 	}
+
+	function deposit() public payable inState(State.AWAITING_DEPOSIT) {
+		require(msg.sender == depositor, "Only depositor can perfom this action.");
+		amount = msg.value;
+		state = State.AWAITING_ARBITER;
+	}
 }
