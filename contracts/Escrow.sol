@@ -37,4 +37,9 @@ contract Escrow {
 		payable(beneficiary).transfer(amount);
 		state = State.COMPLETE;
 	}
+
+	function refund() public onlyArbiter inState(State.AWAITING_ARBITER) {
+		payable(depositor).transfer(amount);
+		state = State.COMPLETE;
+	}
 }
