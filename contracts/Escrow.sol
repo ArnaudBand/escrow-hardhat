@@ -6,4 +6,6 @@ contract Escrow {
 	address public beneficiary;
 	address public depositor;
 	uint public amount;
+
+	enum State { AWAITING_DEPOSITOR, AWAITING_ARBITER, COMPLETE }
 }
