@@ -7,7 +7,7 @@ contract Escrow {
 	address public depositor;
 	uint public amount;
 
-	enum State { AWAITING_DEPOSITOR, AWAITING_ARBITER, COMPLETE }
+	enum State { AWAITING_DEPOSIT, AWAITING_ARBITER, COMPLETE }
 
 	State public state;
 
@@ -19,5 +19,11 @@ contract Escrow {
 	modifier inState(State _state) {
 		require(state == _state, "Invalid State");
 		_;
+	}
+
+	constructor(address _arbiter, address _beneficiary) {
+		arbiter = _arbiter;
+		beneficiary = _beneficiary;
+		state = State.AWAITING_DEPOSIT;
 	}
 }
