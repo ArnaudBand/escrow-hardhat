@@ -2,44 +2,56 @@
 pragma solidity 0.8.19;
 
 contract Escrow {
-	address public arbiter;
-	address public beneficiary;
-	address public depositor;
-	uint public amount;
+    address public arbiter;
+    address public beneficiary;
+    address public depositor;
 
-	enum State { AWAITING_DEPOSIT, AWAITING_ARBITER, COMPLETE }
+    bool public isApproved;
 
-	State public state;
+    constructor(address _arbiter, address _beneficiary) payable {
+        arbiter = _arbiter;
+        beneficiary = _beneficiary;
+        depositor = msg.sender;
+    }
 
-	modifier onlyArbiter() {
-		require(msg.sender == arbiter, "Only arbiter can perform this action.");
-		_;
-	}
+    event Approved(uint);
+    event DisputeStarted();
 
-	modifier inState(State _state) {
-		require(state == _state, "Invalid State");
-		_;
-	}
+    function approve() external {
+        require(msg.sender == arbiter);
+        uint balance = address(this).balance;
+        (bool sent, ) = payable(beneficiary).call{value: balance}("");
+        require(sent, "Failed to send Ether");
+        emit Approved(balance);
+        isApproved = true;
+    }
 
-	constructor(address _arbiter, address _beneficiary) {
-		arbiter = _arbiter;
-		beneficiary = _beneficiary;
-		state = State.AWAITING_DEPOSIT;
-	}
+    function cancel() external {
+        require(msg.sender == arbiter && !isApproved);
+        uint balance = address(this).balance;
+        (bool sent, ) = payable(depositor).call{value: balance}("");
+        require(sent, "Failed to send Ether");
+    }
 
-	function deposit() public payable inState(State.AWAITING_DEPOSIT) {
-		require(msg.sender == depositor, "Only depositor can perfom this action.");
-		amount = msg.value;
-		state = State.AWAITING_ARBITER;
-	}
+    function startDispute() external {
+        require(msg.sender == arbiter || msg.sender == beneficiary, "Invalid caller");
+        require(!isApproved, "Transaction already approved");
+        emit DisputeStarted();
+    }
 
-	function approve() public onlyArbiter inState(State.AWAITING_ARBITER) {
-		payable(beneficiary).transfer(amount);
-		state = State.COMPLETE;
-	}
+    function releaseToBeneficiary() external {
+        require(msg.sender == arbiter, "Invalid caller");
+        require(isApproved, "Transaction not approved");
+        uint balance = address(this).balance;
+        (bool sent, ) = payable(beneficiary).call{value: balance}('');
+        require(sent, "Failed to send ether");
+    }
 
-	function refund() public onlyArbiter inState(State.AWAITING_ARBITER) {
-		payable(depositor).transfer(amount);
-		state = State.COMPLETE;
-	}
+    function releaseToDepositor() external {
+        require(msg.sender == beneficiary, "Invalid caller");
+        require(isApproved, "Transaction not approved");
+        uint balance = address(this).balance;
+        (bool sent, ) = payable(depositor).call{value: balance}('');
+        require(sent, 'Failed to send Ether');
+    }
 }

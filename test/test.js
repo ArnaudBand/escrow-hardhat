@@ -42,4 +42,40 @@ describe('Escrow', function () {
       expect(after.sub(before)).to.eq(deposit);
     });
   });
+
+  describe('after cancellation by the arbiter', () => {
+    it('should transfer balance back to depositor', async () => {
+      const before = await ethers.provider.getBalance(depositor.getAddress());
+      const cancelTxn = await contract.connect(arbiter).cancel();
+      await cancelTxn.wait();
+      const after = await ethers.provider.getBalance(depositor.getAddress());
+      expect(after.sub(before)).to.eq(deposit);
+    });
+  
+    it('should not allow beneficiary to approve after cancellation', async () => {
+      const cancelTxn = await contract.connect(arbiter).cancel();
+      await cancelTxn.wait();
+      await expect(contract.connect(beneficiary).approve()).to.be.reverted;
+    });
+  });
+
+  describe('startDispute', () => {
+    it('should emit DisputeStarted event', async () => {
+      const startDisputeTxn = await contract.connect(beneficiary).startDispute();
+      await startDisputeTxn.wait();
+      const events = await contract.queryFilter('DisputeStarted');
+      expect(events.length).to.equal(1);
+    });
+  
+    it('should revert if the transaction is already approved', async () => {
+      await contract.connect(arbiter).approve();
+      await expect(contract.connect(beneficiary).startDispute()).to.be.revertedWith('Transaction already approved');
+    });
+  
+    it('should revert if an invalid caller tries to start dispute', async () => {
+      await expect(contract.connect(depositor).startDispute()).to.be.revertedWith('Invalid caller');
+    });
+  });
+  
+  
 });
