@@ -15,6 +15,7 @@ contract Escrow {
     }
 
     event Approved(uint);
+    event DisputeStarted();
 
     function approve() external {
         require(msg.sender == arbiter);
@@ -30,5 +31,11 @@ contract Escrow {
         uint balance = address(this).balance;
         (bool sent, ) = payable(depositor).call{value: balance}("");
         require(sent, "Failed to send Ether");
+    }
+
+    function startDispute() external {
+        require(msg.sender == arbiter || msg.sender == beneficiary, "Invalid caller");
+        require(!isApproved, "Transaction already approved");
+        emit DisputeStarted();
     }
 }
