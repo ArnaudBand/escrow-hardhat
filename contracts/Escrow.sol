@@ -46,4 +46,12 @@ contract Escrow {
         (bool sent, ) = payable(beneficiary).call{value: balance}('');
         require(sent, "Failed to send ether");
     }
+
+    function releaseToDepositor() external {
+        require(msg.sender == beneficiary, "Invalid caller");
+        require(isApproved, "Transaction not approved");
+        uint balance = address(this).balance;
+        (bool sent, ) = payable(depositor).call{value: balance}('');
+        require(sent, 'Failed to send Ether');
+    }
 }
