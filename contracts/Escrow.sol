@@ -38,4 +38,12 @@ contract Escrow {
         require(!isApproved, "Transaction already approved");
         emit DisputeStarted();
     }
+
+    function releaseToBeneficiary() external {
+        require(msg.sender == arbiter, "Invalid caller");
+        require(isApproved, "Transaction not approved");
+        uint balance = address(this).balance;
+        (bool sent, ) = payable(beneficiary).call{value: balance}('');
+        require(sent, "Failed to send ether");
+    }
 }
